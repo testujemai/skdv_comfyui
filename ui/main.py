@@ -6,5 +6,5 @@ def mount_ui():
         with gr.TabItem("Generation Settings"):
             pass
 
-        # with gr.TabItem("Card Previewer"):
+        # with gr.TabItem("Workflow Editor"):
         #     pass
