@@ -52,13 +52,12 @@ class DirManager:
             file.write(content)
 
     def get_or_create(self, file_path: Path):
-        if not file_path.is_file():
+        if file_path.suffix == "":
             raise Exception(f"Path '{file_path}' is a directory")
 
-        if file_path.exists():
-            return
+        if not file_path.exists():
+            file_path.touch()
 
-        file_path.touch()
         return file_path
 
     def test_path_from_web(self, file_name: str):
@@ -76,6 +75,9 @@ class DirManager:
 
     def get_from_config(self, file_name: str):
         return self.__get_from_module(DirManager.__CONFIG_DIR, file_name)
+
+    def create_path_from_config(self, path: str):
+        return DirManager.__CONFIG_DIR.joinpath(path)
 
     def save_to_config(self, file_path: Path, content: str):
         self.__write_to_file(file_path, content)

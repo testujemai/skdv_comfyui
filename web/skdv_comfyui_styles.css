@@ -6,3 +6,27 @@
   height: 65vh;
   overflow-y: scroll;
 }
+
+.skdv-button-height {
+  height: 39.594px;
+}
+
+.skdv-align-button-bottom {
+  align-self: end;
+}
+
+.skdv-connection-status {
+  height: 39.594px;
+}
+
+.skdv-connection-status>div:last-child {
+  height: 39.594px;
+  padding: 0;
+}
+
+.skdv-connection-status>div:last-child>h2 {
+  font-size: 14px;
+  border-radius: var(--block-radius);
+  height: 39.594px;
+  padding: 0;
+}
