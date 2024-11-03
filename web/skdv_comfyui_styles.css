@@ -15,7 +15,8 @@
   align-self: end;
 }
 
-.skdv-connection-status {
+.skdv-connection-status,
+.skdv-connection-status>div:first-child {
   height: 39.594px;
 }
 

@@ -3,6 +3,7 @@ import modules.ui as oobabooga_ui
 
 from extensions.skdv_comfyui.config.config_handler import ConfigHandler
 from extensions.skdv_comfyui.config.dir_manager import DirManager
+from extensions.skdv_comfyui.comfyui.api import ComfyAPI
 
 dir_manager = DirManager()
 config_handler = ConfigHandler.setup()
@@ -10,8 +11,6 @@ config_handler = ConfigHandler.setup()
 CONNECTED_COLOR = "#1eab10"
 DISCONNECTED_COLOR = "#b71717"
 CONNECTING_COLOR = "#dfdb0c"
-
-has_connected = False
 
 
 def load_local_workflows() -> list:
@@ -26,6 +25,57 @@ def update_workflow_file(file_name: str):
 def switch_to_random_seed():
     config_handler.set_seed(-1)
     return gr.update(value=-1)
+
+
+def ping_comfy_api():
+    if not ComfyAPI.ping():
+        return (
+            gr.update(color=DISCONNECTED_COLOR, value="Disconnected"),
+            gr.update(choices=[]),
+            gr.update(choices=[]),
+            gr.update(choices=[]),
+            gr.update(choices=[]),
+        )
+
+    parameters = ComfyAPI.get_generation_info()
+    models = ComfyAPI.get_models(parameters)
+    vaes = ComfyAPI.get_vaes(parameters)
+    samplers = ComfyAPI.get_samplers(parameters)
+    schedulers = ComfyAPI.get_schedulers(parameters)
+
+    if config_handler.model == "":
+        config_handler.set_model(models[0])
+
+    if config_handler.vae == "":
+        config_handler.set_vae(vaes[0])
+
+    if config_handler.sampler == "":
+        config_handler.set_sampler(samplers[0])
+
+    if config_handler.scheduler == "":
+        config_handler.set_scheduler(schedulers[0])
+
+    return (
+        gr.update(color=CONNECTED_COLOR, value="Connected"),
+        gr.update(
+            choices=models,
+            value=config_handler.model,
+        ),
+        gr.update(choices=vaes, value=config_handler.vae),
+        gr.update(
+            choices=samplers,
+            value=config_handler.sampler,
+        ),
+        gr.update(
+            choices=schedulers,
+            value=config_handler.scheduler,
+        ),
+    )
+
+
+def force_disconnect_api(new_url: str):
+    config_handler.set_api_url(new_url)
+    return gr.update(color=DISCONNECTED_COLOR, value="Disconnected")
 
 
 def generation_parameters_ui():
@@ -51,6 +101,12 @@ def generation_parameters_ui():
             elem_classes=["skdv-connection-status", "skdv-align-button-bottom"],
         )
 
+        api_url_input.change(
+            fn=force_disconnect_api,
+            inputs=api_url_input,
+            outputs=connection_status_label,
+        )
+
     with gr.Row():
         workflow_dropdown = gr.Dropdown(
             load_local_workflows(),
@@ -59,9 +115,6 @@ def generation_parameters_ui():
             interactive=True,
             elem_classes=["slim-dropdown"],
             scale=2,
-        )
-        load_workflow_button = gr.Button(
-            "Load", elem_classes=["skdv-button-height", "skdv-align-button-bottom"]
         )
 
         oobabooga_ui.create_refresh_button(
@@ -74,18 +127,29 @@ def generation_parameters_ui():
             ["refresh-button"],
         )
 
-        load_workflow_button.click(
+        workflow_dropdown.input(
             fn=lambda file: update_workflow_file(file), inputs=workflow_dropdown
         )
 
     with gr.Row():
         model_dropdown = gr.Dropdown(
-            ["a.safetensors", "b.safetensors", "c.safetensors"], label="Model"
+            [],
+            label="Model",
+            interactive=True,
         )
-        vae_dropdown = gr.Dropdown(["vae1", "vae2", "vae3"], label="VAE")
+        vae_dropdown = gr.Dropdown([], label="VAE", interactive=True)
+
+        model_dropdown.input(
+            fn=lambda model: config_handler.set_model(model), inputs=model_dropdown
+        )
+        vae_dropdown.input(
+            fn=lambda vae: config_handler.set_vae(vae), inputs=vae_dropdown
+        )
 
     with gr.Row():
-        resolution_dropdown = gr.Dropdown(["832x1216"], label="Resolution Preset")
+        resolution_dropdown = gr.Dropdown(
+            ["832x1216"], label="Resolution Preset", interactive=True
+        )
 
     with gr.Row():
         width_slider = gr.Slider(
@@ -113,8 +177,17 @@ def generation_parameters_ui():
         )
 
     with gr.Row():
-        sampler_dropdown = gr.Dropdown(["euler", "euler a"], label="Sampler")
-        scheduler_dropdown = gr.Dropdown(["normal", "karras"], label="Scheduler")
+        sampler_dropdown = gr.Dropdown([], label="Sampler", interactive=True)
+        scheduler_dropdown = gr.Dropdown([], label="Scheduler", interactive=True)
+
+        sampler_dropdown.input(
+            fn=lambda sampler: config_handler.set_sampler(sampler),
+            inputs=sampler_dropdown,
+        )
+        scheduler_dropdown.input(
+            fn=lambda scheduler: config_handler.set_scheduler(scheduler),
+            inputs=scheduler_dropdown,
+        )
 
     with gr.Row():
         sampler_steps_slider = gr.Slider(
@@ -181,3 +254,14 @@ def generation_parameters_ui():
             )
 
             random_seed_button.click(fn=switch_to_random_seed, outputs=seed_input)
+
+    connect_button.click(
+        fn=ping_comfy_api,
+        outputs=[
+            connection_status_label,
+            model_dropdown,
+            vae_dropdown,
+            sampler_dropdown,
+            scheduler_dropdown,
+        ],
+    )

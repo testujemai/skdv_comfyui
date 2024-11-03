@@ -37,7 +37,9 @@ class ConfigHandler:
 
     def __init__(self):
         if ConfigHandler.__loaded_config is None:
-            raise Exception("Attempted to load an empty configuration.")
+            raise Exception(
+                "Attempted to load an empty configuration. Was .setup() called?"
+            )
 
         self._api_url: str = ConfigHandler.__loaded_config["api_url"]
         self._current_workflow_file: str = ConfigHandler.__loaded_config[
@@ -81,6 +83,10 @@ class ConfigHandler:
     def api_url(self):
         return self._api_url
 
+    def set_api_url(self, new_url: str):
+        self._api_url = new_url
+        self.save()
+
     @property
     def current_workflow_file(self):
         return self._current_workflow_file
@@ -93,9 +99,17 @@ class ConfigHandler:
     def model(self):
         return self._model
 
+    def set_model(self, new_model: str):
+        self._model = new_model
+        self.save()
+
     @property
     def vae(self):
         return self._vae
+
+    def set_vae(self, new_vae: str):
+        self._vae = new_vae
+        self.save()
 
     @property
     def width(self):
@@ -117,9 +131,17 @@ class ConfigHandler:
     def sampler(self):
         return self._sampler
 
+    def set_sampler(self, new_sampler: str):
+        self._sampler = new_sampler
+        self.save()
+
     @property
     def scheduler(self):
         return self._scheduler
+
+    def set_scheduler(self, new_scheduler: str):
+        self._scheduler = new_scheduler
+        self.save()
 
     @property
     def steps(self):
