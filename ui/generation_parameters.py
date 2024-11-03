@@ -29,6 +29,7 @@ def switch_to_random_seed():
 
 def ping_comfy_api():
     if not ComfyAPI.ping():
+        gr.Error("Could not connect to ComfyUI")
         return (
             gr.update(color=DISCONNECTED_COLOR, value="Disconnected"),
             gr.update(choices=[]),
@@ -55,6 +56,7 @@ def ping_comfy_api():
     if config_handler.scheduler == "":
         config_handler.set_scheduler(schedulers[0])
 
+    gr.Info("Connected to ComfyUI")
     return (
         gr.update(color=CONNECTED_COLOR, value="Connected"),
         gr.update(
@@ -92,7 +94,9 @@ def generation_parameters_ui():
         )
 
         connect_button = gr.Button(
-            "Connect", elem_classes=["skdv-button-height", "skdv-align-button-bottom"]
+            "Connect",
+            elem_id="skdv-connect-comfyapi",
+            elem_classes=["skdv-button-height", "skdv-align-button-bottom"],
         )
         connection_status_label = gr.Label(
             "Disconnected",
