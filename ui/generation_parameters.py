@@ -1,8 +1,40 @@
 import gradio as gr
 
+from extensions.skdv_comfyui.config.config_handler import ConfigHandler
+from extensions.skdv_comfyui.config.dir_manager import DirManager
+
+dir_manager = DirManager()
+config_handler = ConfigHandler.setup()
+
+
+def load_local_workflows() -> list:
+    return [file.name for file in dir_manager.load_local_workflows()]
+
 
 def generation_parameters_ui():
     gr.Markdown("## Generation Parameters")
+
+    with gr.Row():
+        api_url_input = gr.Textbox(
+            "api_url", max_lines=1, interactive=True, label="ComfyUI Endpoint"
+        )
+
+        connect_button = gr.Button("Connect", size="sm")
+
+    with gr.Row():
+        workflow_dropdown = gr.Dropdown(
+            load_local_workflows(),
+            label="Select a ComfyUI workflow",
+            container=False,
+            interactive=True,
+            elem_classes=["slim-dropdown"],
+        )
+        update_workflows_button = gr.Button("Refresh", size="sm")
+
+        update_workflows_button.click(
+            fn=lambda: gr.update(choices=load_local_workflows()),
+            outputs=workflow_dropdown,
+        )
 
     with gr.Row():
         model_dropdown = gr.Dropdown(
@@ -61,12 +93,10 @@ def generation_parameters_ui():
             random_seed_button = gr.Button(
                 value="Random",
                 size="lg",
-                interactive=True,
                 elem_classes=["skdv-full-height-btn"],
             )
             reuse_seed_button = gr.Button(
                 value="Re-use last seed",
                 size="lg",
-                interactive=True,
                 elem_classes=["skdv-full-height-btn"],
             )

@@ -4,6 +4,10 @@ import os
 
 from gradio.utils import NamedString
 
+from extensions.skdv_comfyui.config.config_handler import ConfigHandler
+
+config_handler = ConfigHandler.setup()
+
 
 def parse_json_file(file_path: NamedString) -> dict:
     try:
