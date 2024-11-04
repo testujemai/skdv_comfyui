@@ -4,6 +4,7 @@ import modules.ui as oobabooga_ui
 from extensions.skdv_comfyui.config.config_handler import ConfigHandler
 from extensions.skdv_comfyui.config.dir_manager import DirManager
 from extensions.skdv_comfyui.comfyui.api import ComfyAPI
+from extensions.skdv_comfyui.ui.shared import shared_ui
 
 dir_manager = DirManager()
 config_handler = ConfigHandler.setup()
@@ -239,7 +240,7 @@ def generation_parameters_ui():
                 interactive=True,
                 info="Use -1 for a random seed.",
             )
-            previous_seed_display = gr.Number(
+            shared_ui["previous-seed-display"] = gr.Number(
                 value=config_handler.seed,
                 interactive=False,
                 label="Last generated seed",

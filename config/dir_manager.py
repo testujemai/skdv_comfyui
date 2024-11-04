@@ -48,8 +48,10 @@ class DirManager:
         self.__check_source_exists(module.joinpath(resource))
         return module.joinpath(resource)
 
-    def __write_to_file(self, file_path: Path, content: str):
-        with open(file_path, "w", encoding="utf-8") as file:
+    def __write_to_file(
+        self, file_path: Path, content: str | bytes, write_binary=False
+    ):
+        with open(file_path, "wb" if write_binary else "w") as file:
             file.write(content)
 
     def get_or_create(self, file_path: Path):
@@ -85,9 +87,31 @@ class DirManager:
         return file_path
 
     def get_from_workflows(self, workflow_file: str):
-        return self.__get_from_module(
-            DirManager.__WORKFLOW_DIR, f"{workflow_file}.json"
+        return self.__get_from_module(DirManager.__WORKFLOW_DIR, workflow_file)
+
+    def test_path_to_character(self, character: str):
+        return self.__check_source_exists(
+            DirManager.__GENERATED_IMAGES_DIR.joinpath(character), skip_check=True
         )
+
+    def get_images_from_character(self, character: str):
+        self.__ensure_dir_exists(DirManager.__GENERATED_IMAGES_DIR.joinpath(character))
+        image_dir = self.__get_from_module(DirManager.__GENERATED_IMAGES_DIR, character)
+        return list(image_dir.iterdir())
+
+    def get_image_from_character(self, character: str, image_name: str):
+        images = self.get_images_from_character(character)
+        for image in images:
+            if image.name == image_name:
+                return image
+
+        return None
+
+    def save_image_to_character(self, character: str, image_name: str, content: bytes):
+        self.__ensure_dir_exists(DirManager.__GENERATED_IMAGES_DIR.joinpath(character))
+        image_dir = self.__get_from_module(DirManager.__GENERATED_IMAGES_DIR, character)
+        self.__write_to_file(image_dir.joinpath(image_name), content, write_binary=True)
+        return image_dir.joinpath(image_name)
 
     def load_local_workflows(self):
         return list(self.get_workflows_dir().iterdir())
