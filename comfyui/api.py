@@ -1,8 +1,10 @@
 import requests
 
 from extensions.skdv_comfyui.config.config_handler import ConfigHandler
+from extensions.skdv_comfyui.config.dir_manager import DirManager
 
 CONFIG_HANDLER = ConfigHandler.setup()
+DIR_MANAGER = DirManager()
 
 
 class ComfyAPI:

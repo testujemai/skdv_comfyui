@@ -20,6 +20,10 @@ DEFAULT_CONFIG = {
     "cfg_scale": 7,
     "clip_skip": 0,
     "seed": -1,
+    "shared_positive_prompt": "",
+    "shared_negative_prompt": "",
+    "edit_before_generating": False,
+    "interactive_mode": False,
 }
 
 dir_manager = DirManager()
@@ -55,6 +59,12 @@ class ConfigHandler:
         self._cfg_scale: float = ConfigHandler.__loaded_config["cfg_scale"]
         self._clip_skip: int = ConfigHandler.__loaded_config["clip_skip"]
         self._seed: int = ConfigHandler.__loaded_config["seed"]
+        self._shared_positive_prompt: str = ConfigHandler.__loaded_config[
+            "shared_positive_prompt"
+        ]
+        self._shared_negative_prompt: str = ConfigHandler.__loaded_config[
+            "shared_negative_prompt"
+        ]
 
     @staticmethod
     def setup():
@@ -175,6 +185,22 @@ class ConfigHandler:
         self._seed = new_seed
         self.save()
 
+    @property
+    def shared_positive_prompt(self):
+        return self._shared_positive_prompt
+
+    def set_shared_positive_prompt(self, prompt: str):
+        self._shared_positive_prompt = prompt
+        self.save()
+
+    @property
+    def shared_negative_prompt(self):
+        return self._shared_negative_prompt
+
+    def set_shared_negative_prompt(self, prompt: str):
+        self._shared_negative_prompt = prompt
+        self.save()
+
     def to_dict(self):
         return {
             "api_url": self._api_url,
@@ -189,4 +215,6 @@ class ConfigHandler:
             "cfg_scale": self._cfg_scale,
             "clip_skip": self._clip_skip,
             "seed": self._seed,
+            "shared_positive_prompt": self._shared_positive_prompt,
+            "shared_negative_prompt": self._shared_positive_prompt,
         }

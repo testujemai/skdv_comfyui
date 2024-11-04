@@ -7,7 +7,7 @@ class DirManager:
     __EXT_DIR = Path("extensions/skdv_comfyui")
     __WEB_DIR = __EXT_DIR.joinpath("web")
     __WORKFLOW_DIR = __EXT_DIR.joinpath("workflows")
-    __GENERATED_IMAGES_DIR = __EXT_DIR.joinpath("generated_images")
+    __GENERATED_IMAGES_DIR = __EXT_DIR.joinpath("generated")
     __CONFIG_DIR = __EXT_DIR.joinpath("config")
 
     def __new__(cls) -> "DirManager":
@@ -24,6 +24,7 @@ class DirManager:
 
     def __init__(self) -> None:
         self.__ensure_dir_exists(DirManager.__WORKFLOW_DIR)
+        self.__ensure_dir_exists(DirManager.__GENERATED_IMAGES_DIR)
 
     def get_web_dir(self):
         return DirManager.__WEB_DIR
