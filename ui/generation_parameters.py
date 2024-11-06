@@ -1,9 +1,8 @@
 import gradio as gr
 import modules.ui as oobabooga_ui
-
+from extensions.skdv_comfyui.comfyui.api import ComfyAPI
 from extensions.skdv_comfyui.config.config_handler import ConfigHandler
 from extensions.skdv_comfyui.config.dir_manager import DirManager
-from extensions.skdv_comfyui.comfyui.api import ComfyAPI
 from extensions.skdv_comfyui.ui.shared import shared_ui
 
 dir_manager = DirManager()
@@ -12,6 +11,25 @@ config_handler = ConfigHandler.setup()
 CONNECTED_COLOR = "#1eab10"
 DISCONNECTED_COLOR = "#b71717"
 CONNECTING_COLOR = "#dfdb0c"
+
+RESOLUTION_PRESETS = [
+    "512x512",
+    "512x768",
+    "512x912",
+    "576x768",
+    "768x512",
+    "768x576",
+    "768x768",
+    "912x512",
+    "640x1536 (SDXL)",
+    "768x1344 (SDXL)",
+    "832x1216 (SDXL)",
+    "896x1152 (SDXL)",
+    "1152x896 (SDXL)",
+    "1216x832 (SDXL)",
+    "1344x768 (SDXL)",
+    "1536x640 (SDXL)",
+]
 
 
 def load_local_workflows() -> list:
@@ -26,6 +44,22 @@ def update_workflow_file(file_name: str):
 def switch_to_random_seed():
     config_handler.set_seed(-1)
     return gr.update(value=-1)
+
+
+def switch_to_fixed_seed(previous_seed: int):
+    config_handler.set_seed(previous_seed)
+    return gr.update(value=previous_seed)
+
+
+def apply_resolution_preset(preset: str):
+    if preset.count(" ") >= 1:
+        preset = preset.split(" ")[0]
+
+    resolution = preset.split("x")
+    config_handler.set_width(int(resolution[0]))
+    config_handler.set_height(int(resolution[1]))
+
+    return gr.update(value=config_handler.width), gr.update(value=config_handler.height)
 
 
 def ping_comfy_api():
@@ -153,7 +187,10 @@ def generation_parameters_ui():
 
     with gr.Row():
         resolution_dropdown = gr.Dropdown(
-            ["832x1216"], label="Resolution Preset", interactive=True
+            list(RESOLUTION_PRESETS),
+            value=RESOLUTION_PRESETS[10],
+            label="Resolution Preset",
+            interactive=True,
         )
 
     with gr.Row():
@@ -180,6 +217,12 @@ def generation_parameters_ui():
         height_slider.release(
             fn=lambda height: config_handler.set_height(height), inputs=height_slider
         )
+
+    resolution_dropdown.input(
+        fn=apply_resolution_preset,
+        inputs=resolution_dropdown,
+        outputs=[width_slider, height_slider],
+    )
 
     with gr.Row():
         sampler_dropdown = gr.Dropdown([], label="Sampler", interactive=True)
@@ -259,6 +302,11 @@ def generation_parameters_ui():
             )
 
             random_seed_button.click(fn=switch_to_random_seed, outputs=seed_input)
+            reuse_seed_button.click(
+                fn=switch_to_fixed_seed,
+                inputs=shared_ui["previous-seed-display"],
+                outputs=seed_input,
+            )
 
     connect_button.click(
         fn=ping_comfy_api,

@@ -27,6 +27,7 @@
 
 .skdv-connection-status>div:last-child>h2 {
   font-size: 14px;
+  text-align: left;
   border-radius: var(--block-radius);
   height: 39.594px;
   padding: 0;
