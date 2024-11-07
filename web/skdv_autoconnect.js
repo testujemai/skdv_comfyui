@@ -20,15 +20,13 @@
     return;
   }
 
-  const generateButton = document.getElementById(
-    "skdv_comfyui_generate_button"
-  );
-  if (generateButton == null) {
-    console.error("[skdv_comfyui] Could not find generate button.");
+  const hoverMenuButtonsComfyUI = document.querySelectorAll('[id^="skdv_comfyui_button_"]')
+  if (hoverMenuButtonsComfyUI == null || hoverMenuButtonsComfyUI == undefined || hoverMenuButtonsComfyUI.length == 0) {
+    console.error("[skdv_comfyui] Could not find new hover menu button.");
     return;
   }
 
-  hoverMenu.insertBefore(generateButton, hoverMenu.firstChild);
+  hoverMenuButtonsComfyUI.forEach(node => hoverMenu.insertBefore(node, hoverMenu.firstChild))
 })();
 
 (() => {
