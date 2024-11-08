@@ -1,7 +1,5 @@
 import requests
 
-from modules import shared
-
 from extensions.skdv_comfyui.config.config_handler import ConfigHandler
 from extensions.skdv_comfyui.config.dir_manager import DirManager
 from extensions.skdv_comfyui.comfyui.workflow import ComfyWorkflow

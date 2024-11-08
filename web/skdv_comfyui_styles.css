@@ -32,3 +32,13 @@
   height: 39.594px;
   padding: 0;
 }
+
+.skdv-typing-dots {
+  -webkit-transform: translateY(20px);
+  transform: translateY(20px);
+}
+
+.skdv-typing-dots>span {
+  background: rgb(0, 9, 36);
+  background: linear-gradient(90deg, rgba(0, 9, 36, 1) 0%, rgba(0, 145, 208, 1) 100%);
+}

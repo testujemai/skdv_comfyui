@@ -46,3 +46,19 @@
 
   extensionSection.insertBefore(comfyui_panel, extensionSection.firstChild);
 })();
+
+(() => {
+  const dots = document.getElementById("skdv_comfyui_generating_dots");
+  if (dots == null) {
+    console.error("[skdv_comfyui] Could not find generation dots");
+    return;
+  }
+
+  const originalTypyingDots = document.getElementById("typing-container");
+  if (originalTypyingDots == null) {
+    console.error("[skdv_comfyui] Could not find typing dots");
+    return;
+  }
+
+  originalTypyingDots.parentElement.insertBefore(dots, originalTypyingDots.parentElement.firstChild);
+})();

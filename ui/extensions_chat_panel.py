@@ -20,6 +20,11 @@ def history_is_blank(history: dict):
     return len(history["visible"]) == 0 or len(history["internal"]) == 0
 
 
+def ping_comfyui():
+    if not ComfyAPI.ping():
+        gr.Warning("Disconnected from ComfyUI")
+
+
 def remove_image_from_text(text: str):
     return text[: text.index("<img")] + text[text.index("skdv_comfyui/>'/>") + 17 :]
 
@@ -38,6 +43,7 @@ def internal_text_contains_comfyui_image(text: str):
 
 def generate_image(character: str):
     global latest_image_tag, alt_image_text
+    ping_comfyui()
 
     latest_image_tag = None
     alt_image_text = None
@@ -50,7 +56,9 @@ def generate_image(character: str):
     image_path, seed = ComfyAPI.generate(workflow)
 
     alt_image_text = f"<comfyui image, seed: {seed} - skdv_comfyui/>"
-    latest_image_tag = f"<img src='file/{image_path.as_posix()}' style='max-width: unset;' alt='{alt_image_text}'/>\n"
+    latest_image_tag = (
+        f"<img src='file/{image_path.as_posix()}' alt='{alt_image_text}'/>\n"
+    )
     return gr.update(value=seed)
 
 
@@ -134,8 +142,12 @@ def handle_send_image_message_click(
 
 
 def comfyui_chat_panel_ui():
-    with gr.Accordion("ComfyUI Generation", elem_id="skdv_comfyui_generation_panel"):
-        pass
+    generation_dots = gr.HTML(
+        value='<div class="typing skdv-typing-dots"><span></span><span class="dot1"></span><span class="dot2"></span></div>',
+        label="typing",
+        elem_id="skdv_comfyui_generating_dots",
+        visible=False,
+    )
 
     hover_menu_generate_button = gr.Button(
         "Generate image: last message", elem_id="skdv_comfyui_button_generate"
@@ -149,40 +161,76 @@ def comfyui_chat_panel_ui():
         "Remove last image", elem_id="skdv_comfyui_button_remove_image"
     )
 
+    with gr.Accordion(
+        "ComfyUI Generation", open=False, elem_id="skdv_comfyui_generation_panel"
+    ):
+        character_positive_prompt_input = gr.TextArea(
+            value="",
+            placeholder="glasses, uniform, ...",
+            interactive=True,
+            label="Character Specific Positive Prompt",
+            lines=3,
+        )
+        character_negative_prompt_input = gr.TextArea(
+            value="",
+            placeholder="black hair, jeans, ...",
+            interactive=True,
+            label="Character Specific Negative Prompt",
+            lines=3,
+        )
+
     hover_menu_generate_button.click(
+        lambda: gr.update(visible=True), outputs=generation_dots, show_progress="hidden"
+    ).then(
         fn=generate_image,
         inputs=shared.gradio["character_menu"],
         outputs=shared_ui["previous-seed-display"],
-        show_progress="full",
+        show_progress="hidden",
     ).then(
         fn=lambda: (latest_image_tag),
         outputs=m_utils.gradio("Chat input"),
+        show_progress="hidden",
     ).then(
         fn=handle_send_image_message_click,
         inputs=m_utils.gradio("Chat input", "unique_id", "display", "interface_state"),
         outputs=m_utils.gradio("history", "display", "Chat input"),
+        show_progress="hidden",
+    ).then(
+        fn=lambda: gr.update(visible=False),
+        outputs=generation_dots,
+        show_progress="hidden",
     )
 
     hover_menu_remove_image_button.click(
         fn=handle_remove_latest_image,
         inputs=m_utils.gradio("unique_id", "display", "interface_state"),
         outputs=m_utils.gradio("history", "display"),
+        show_progress="hidden",
     )
 
     hover_menu_regenerate_button.click(
+        lambda: gr.update(visible=True), outputs=generation_dots, show_progress="hidden"
+    ).then(
         fn=handle_remove_latest_image,
         inputs=m_utils.gradio("unique_id", "display", "interface_state"),
         outputs=m_utils.gradio("history", "display"),
+        show_progress="hidden",
     ).then(
         fn=generate_image,
         inputs=shared.gradio["character_menu"],
         outputs=shared_ui["previous-seed-display"],
-        show_progress="full",
+        show_progress="hidden",
     ).then(
         fn=lambda: (latest_image_tag),
         outputs=m_utils.gradio("Chat input"),
+        show_progress="hidden",
     ).then(
         fn=handle_send_image_message_click,
         inputs=m_utils.gradio("Chat input", "unique_id", "display", "interface_state"),
         outputs=m_utils.gradio("history", "display", "Chat input"),
+        show_progress="hidden",
+    ).then(
+        fn=lambda: gr.update(visible=False),
+        outputs=generation_dots,
+        show_progress="hidden",
     )
