@@ -62,3 +62,31 @@
 
   originalTypyingDots.parentElement.insertBefore(dots, originalTypyingDots.parentElement.firstChild);
 })();
+
+/** @param {HTMLImageElement} sourceImageTag **/
+function skdvExpandImage(sourceImageTag) {
+  const mainDiv = document.createElement('div');
+  mainDiv.classList.add("skdv-image-previewer");
+
+  const imageTag = document.createElement('img');
+  imageTag.src = sourceImageTag.src;
+  imageTag.alt = "Expanded Image";
+  imageTag.classList.add("skdv-expanded-image");
+
+  const closeImageTag = document.createElement('img');
+  closeImageTag.src = "https://static.thenounproject.com/png/390423-200.png";
+  closeImageTag.alt = "Close Expanded Image";
+  closeImageTag.width = 65;
+  closeImageTag.height = 65;
+  closeImageTag.classList.add("skdv-close-image");
+  closeImageTag.onclick = () => {
+    mainDiv.remove();
+  };
+
+  mainDiv.appendChild(imageTag);
+  mainDiv.appendChild(closeImageTag);
+  document.body.appendChild(mainDiv);
+}
+const skdvcomfy_script = document.createElement('script');
+skdvcomfy_script.innerHTML = skdvExpandImage.toString();
+document.head.appendChild(skdvcomfy_script);

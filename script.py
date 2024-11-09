@@ -21,7 +21,7 @@ def custom_css():
 
 
 def custom_js():
-    return load_skdv_comfyui_resource("skdv_autoconnect.js")
+    return load_skdv_comfyui_resource("skdv_comfyui.js")
 
 
 def ui():

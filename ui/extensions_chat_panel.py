@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Literal
 import gradio as gr
 
@@ -48,13 +49,14 @@ def internal_text_contains_comfyui_image(text: str):
         return False
 
 
+def create_image_tag(image_path: Path, alt_image_text: str):
+    return f"<img src='file/{image_path.as_posix()}' class='skdv-generated-image' onclick='skdvExpandImage(this)' alt='{alt_image_text}'/>\n"
+
+
 def get_character_prompt(
     prompt_type: Literal["positive"] | Literal["negative"],
     character_name: str | None = None,
 ):
-    if prompt_type != "positive" and prompt_type != "negative":
-        raise ValueError("Unexpected value for prompt type: {prompt}")
-
     character = CONFIG_HANDLER.get_character_prompts(
         character_name or shared.gradio["name2"].value
     )
@@ -96,9 +98,7 @@ def generate_image(character: str, positive: str, negative: str):
     image_path, seed = ComfyAPI.generate(workflow)
 
     alt_image_text = f"<comfyui image, seed: {seed} - skdv_comfyui/>"
-    latest_image_tag = (
-        f"<img src='file/{image_path.as_posix()}' alt='{alt_image_text}'/>\n"
-    )
+    latest_image_tag = create_image_tag(image_path, alt_image_text)
     return gr.update(value=seed)
 
 

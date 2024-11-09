@@ -42,3 +42,37 @@
   background: rgb(0, 9, 36);
   background: linear-gradient(90deg, rgba(0, 9, 36, 1) 0%, rgba(0, 145, 208, 1) 100%);
 }
+
+.skdv-generated-image:hover {
+  cursor: pointer;
+}
+
+.skdv-image-previewer {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skdv-expanded-image {
+  width: auto;
+  height: auto;
+  max-height: 70%;
+  max-width: 90%;
+}
+
+.skdv-close-image {
+  position: absolute;
+  top: 0;
+  right: 0;
+  -webkit-filter: invert(100%);
+  filter: invert(100%);
+}
+
+.skdv-close-image:hover {
+  cursor: pointer;
+}
