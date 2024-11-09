@@ -33,7 +33,7 @@ RESOLUTION_PRESETS = [
 
 
 def load_local_workflows() -> list:
-    return [file.name for file in dir_manager.load_local_workflows()]
+    return [file.name for file in dir_manager.get_local_workflows()]
 
 
 def update_workflow_file(file_name: str):

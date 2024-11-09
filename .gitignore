@@ -1,4 +1,8 @@
-__pycache__
+# Directories
+__pycache__/
 workflows/
 generated/
+
+# Files
 config.json
+character_prompts.json

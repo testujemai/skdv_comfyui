@@ -29,9 +29,35 @@ DEFAULT_CONFIG = {
 dir_manager = DirManager()
 
 
+class CharacterPrompt:
+    def __init__(self, character: str, positive: str, negative: str):
+        self._character = character
+        self._positive = positive
+        self._negative = negative
+
+    @property
+    def positive(self):
+        return self._positive
+
+    @property
+    def negative(self):
+        return self._negative
+
+    @property
+    def character(self):
+        return self._character
+
+    def __eq__(self, value: object, /) -> bool:
+        if type(value) is not type(self):
+            return False
+
+        return self._character == value.character
+
+
 class ConfigHandler:
     __instance: "ConfigHandler | None" = None
     __loaded_config: dict | None = None
+    __loaded_character_prompts: dict[str, str] | None = None
 
     def __new__(cls) -> "ConfigHandler":
         if cls.__instance is None:
@@ -66,6 +92,13 @@ class ConfigHandler:
             "shared_negative_prompt"
         ]
 
+        self._character_prompts: list[CharacterPrompt] = []
+        if ConfigHandler.__loaded_character_prompts is not None:
+            for chara, prompts in ConfigHandler.__loaded_character_prompts.items():
+                self._character_prompts.append(
+                    CharacterPrompt(chara, prompts[0], prompts[1])
+                )
+
     @staticmethod
     def setup():
         if ConfigHandler.__instance is not None:
@@ -75,9 +108,17 @@ class ConfigHandler:
             with open(dir_manager.get_from_config("config.json"), "r") as config:
                 ConfigHandler.__loaded_config = json.loads(config.read())
 
+        if dir_manager.test_path_from_config("character_prompts.json"):
+            with open(
+                dir_manager.get_from_config("character_prompts.json"), "r"
+            ) as prompts:
+                ConfigHandler.__loaded_character_prompts = json.loads(prompts.read())
+
+        if ConfigHandler.__loaded_config is not None:
             return ConfigHandler()
 
         ConfigHandler.__loaded_config = DEFAULT_CONFIG
+        ConfigHandler.__loaded_character_prompts = {}
         instance = ConfigHandler()
         instance.save()
         return instance
@@ -88,6 +129,16 @@ class ConfigHandler:
             dir_manager.create_path_from_config("config.json")
         )
         dir_manager.save_to_config(config_file_path, json.dumps(self.to_dict()))
+
+        characters_file_path = dir_manager.get_or_create(
+            dir_manager.create_path_from_config("character_prompts.json")
+        )
+        dir_manager.save_to_config(
+            characters_file_path,
+            json.dumps(
+                {c.character: [c.positive, c.negative] for c in self._character_prompts}
+            ),
+        )
 
     @property
     def api_url(self):
@@ -199,6 +250,25 @@ class ConfigHandler:
 
     def set_shared_negative_prompt(self, prompt: str):
         self._shared_negative_prompt = prompt
+        self.save()
+
+    def get_character_prompts(self, character: str) -> CharacterPrompt | None:
+        if character not in [chara.character for chara in self._character_prompts]:
+            return None
+
+        for chara in self._character_prompts:
+            if chara.character == character:
+                return chara
+
+        raise ValueError(f"CharacterPrompt not found for: {character}")
+
+    def save_character_prompt(self, character_prompts: CharacterPrompt):
+        # delete previous if any
+        for index, chara in enumerate(self._character_prompts):
+            if chara == character_prompts:
+                del self._character_prompts[index]
+
+        self._character_prompts.append(character_prompts)
         self.save()
 
     def to_dict(self):

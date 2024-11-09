@@ -1,3 +1,4 @@
+from typing import Literal
 import gradio as gr
 
 import modules.chat as m_chat
@@ -7,7 +8,7 @@ from modules import shared
 
 from extensions.skdv_comfyui.comfyui.api import ComfyAPI
 from extensions.skdv_comfyui.comfyui.workflow import ComfyWorkflow
-from extensions.skdv_comfyui.config.config_handler import ConfigHandler
+from extensions.skdv_comfyui.config.config_handler import CharacterPrompt, ConfigHandler
 from extensions.skdv_comfyui.ui.shared import shared_ui
 
 CONFIG_HANDLER = ConfigHandler.setup()
@@ -34,23 +35,62 @@ def remove_alt_text_from_internal(text: str):
 
 
 def text_contains_comfyui_image(text: str):
-    return text.index("skdv_comfyui/>'/>") >= 0
+    try:
+        return text.index("skdv_comfyui/>'/>") >= 0
+    except ValueError:
+        return False
 
 
 def internal_text_contains_comfyui_image(text: str):
-    return text.index("<comfyui") >= 0
+    try:
+        return text.index("<comfyui") >= 0
+    except ValueError:
+        return False
 
 
-def generate_image(character: str):
+def get_character_prompt(
+    prompt_type: Literal["positive"] | Literal["negative"],
+    character_name: str | None = None,
+):
+    if prompt_type != "positive" and prompt_type != "negative":
+        raise ValueError("Unexpected value for prompt type: {prompt}")
+
+    character = CONFIG_HANDLER.get_character_prompts(
+        character_name or shared.gradio["name2"].value
+    )
+    if character is None:
+        return None
+
+    return character.positive if prompt_type == "positive" else character.negative
+
+
+def save_character_prompt(prompt: str, is_positive: bool, state: dict):
+    previous = CONFIG_HANDLER.get_character_prompts(state["name2"])
+    if previous is None:
+        inverse_prompt = ""
+    else:
+        inverse_prompt = previous.negative if is_positive else previous.positive
+
+    if is_positive:
+        character = CharacterPrompt(state["name2"], prompt, inverse_prompt)
+    else:
+        character = CharacterPrompt(state["name2"], inverse_prompt, prompt)
+
+    CONFIG_HANDLER.save_character_prompt(character)
+
+
+def generate_image(character: str, positive: str, negative: str):
     global latest_image_tag, alt_image_text
     ping_comfyui()
+    if not ComfyAPI.ping():
+        return gr.update()
 
     latest_image_tag = None
     alt_image_text = None
 
     workflow = ComfyWorkflow(CONFIG_HANDLER.current_workflow_file)
-    workflow.set_positive_prompt("1girl, glasses")
-    workflow.set_negative_prompt("bad quality")
+    workflow.set_positive_prompt(positive)
+    workflow.set_negative_prompt(negative)
     workflow.set_character(character)
 
     image_path, seed = ComfyAPI.generate(workflow)
@@ -162,28 +202,61 @@ def comfyui_chat_panel_ui():
     )
 
     with gr.Accordion(
-        "ComfyUI Generation", open=False, elem_id="skdv_comfyui_generation_panel"
+        "ComfyUI Generation Parameters",
+        open=False,
+        elem_id="skdv_comfyui_generation_panel",
     ):
+        character_selected = gr.Markdown(
+            value="### Editing prompts for: *None*",
+        )
         character_positive_prompt_input = gr.TextArea(
-            value="",
+            value=get_character_prompt("positive"),
             placeholder="glasses, uniform, ...",
             interactive=True,
-            label="Character Specific Positive Prompt",
+            label="Positive Prompt",
             lines=3,
         )
         character_negative_prompt_input = gr.TextArea(
-            value="",
+            value=get_character_prompt("negative"),
             placeholder="black hair, jeans, ...",
             interactive=True,
-            label="Character Specific Negative Prompt",
+            label="Negative Prompt",
             lines=3,
+        )
+
+        shared.gradio["name2"].change(
+            fn=lambda name: gr.update(value=f"### Editing prompts for: *{name}*"),
+            inputs=shared.gradio["character_menu"],
+            outputs=character_selected,
+        ).then(
+            fn=lambda chara: (
+                get_character_prompt("positive", chara),
+                get_character_prompt("negative", chara),
+            ),
+            inputs=shared.gradio["character_menu"],
+            outputs=[character_positive_prompt_input, character_negative_prompt_input],
+        )
+
+        character_positive_prompt_input.input(
+            fn=lambda prompt, state: save_character_prompt(prompt, True, state),
+            inputs=[character_positive_prompt_input]
+            + m_utils.gradio("interface_state"),
+        )
+        character_negative_prompt_input.input(
+            fn=lambda prompt, state: save_character_prompt(prompt, False, state),
+            inputs=[character_negative_prompt_input]
+            + m_utils.gradio("interface_state"),
         )
 
     hover_menu_generate_button.click(
         lambda: gr.update(visible=True), outputs=generation_dots, show_progress="hidden"
     ).then(
         fn=generate_image,
-        inputs=shared.gradio["character_menu"],
+        inputs=[
+            shared.gradio["character_menu"],
+            character_positive_prompt_input,
+            character_negative_prompt_input,
+        ],
         outputs=shared_ui["previous-seed-display"],
         show_progress="hidden",
     ).then(
@@ -217,7 +290,11 @@ def comfyui_chat_panel_ui():
         show_progress="hidden",
     ).then(
         fn=generate_image,
-        inputs=shared.gradio["character_menu"],
+        inputs=[
+            shared.gradio["character_menu"],
+            character_positive_prompt_input,
+            character_negative_prompt_input,
+        ],
         outputs=shared_ui["previous-seed-display"],
         show_progress="hidden",
     ).then(

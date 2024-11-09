@@ -113,7 +113,7 @@ class DirManager:
         self.__write_to_file(image_dir.joinpath(image_name), content, write_binary=True)
         return image_dir.joinpath(image_name)
 
-    def load_local_workflows(self):
+    def get_local_workflows(self):
         return list(self.get_workflows_dir().iterdir())
 
     def save_to_workflows(self, workflow_file_name: str, content: str):
