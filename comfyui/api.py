@@ -19,6 +19,13 @@ class ComfyAPI:
             return False
 
     @staticmethod
+    def unload():
+        response = requests.post(CONFIG_HANDLER.api_url + "/free", json={"mode": 1})
+        response.raise_for_status()
+
+        return response.status_code == 200
+
+    @staticmethod
     def get_generation_info() -> dict:
         try:
             return requests.get(CONFIG_HANDLER.api_url + "/object_info").json()

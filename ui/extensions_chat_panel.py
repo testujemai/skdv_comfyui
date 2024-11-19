@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Literal
 import gradio as gr
 
+from extensions.skdv_comfyui.textgen.utils import give_VRAM_priority_to
 import modules.chat as m_chat
 import modules.utils as m_utils
-from modules.extensions import apply_extensions
 from modules import shared
 
 from extensions.skdv_comfyui.comfyui.api import ComfyAPI
@@ -87,6 +87,9 @@ def generate_image(character: str, positive: str, negative: str):
     if not ComfyAPI.ping():
         return gr.update()
 
+    if CONFIG_HANDLER.unload_text_model_before_generating:
+        give_VRAM_priority_to("imagegen")
+
     latest_image_tag = None
     alt_image_text = None
 
@@ -102,8 +105,10 @@ def generate_image(character: str, positive: str, negative: str):
     return gr.update(value=seed)
 
 
-def send_image_message(image_tag: str | None, state: dict):
-    history = state["history"]
+def send_image_message(
+    image_tag: str | None, history: dict[str, list[list[str]]], state: dict
+):
+    new_history = history
 
     if image_tag is None:
         return history
@@ -112,40 +117,43 @@ def send_image_message(image_tag: str | None, state: dict):
         return history
 
     if history_is_blank(history):
-        state["history"] = m_chat.load_latest_history(state)
-        history = state["history"]
+        new_history = m_chat.load_latest_history(state)
 
-    history["visible"][-1][1] += image_tag
-    history["internal"][-1][1] += apply_extensions(
-        "input", alt_image_text, state, is_chat=True
-    )
-    return history
+    new_history["visible"][-1][1] += image_tag
+    new_history["internal"][-1][1] += alt_image_text
+    return new_history
 
 
-def remove_image_from_last_message(state: dict):
-    history = state["history"]
+def remove_image_from_last_message(history: dict[str, list[list[str]]]):
+    new_history = history
 
-    if history_is_blank(history):
-        return history
+    if history_is_blank(new_history):
+        return new_history
 
-    if internal_text_contains_comfyui_image(history["internal"][-1][1]):
-        history["internal"][-1][1] = remove_alt_text_from_internal(
-            history["internal"][-1][1]
+    if internal_text_contains_comfyui_image(new_history["internal"][-1][1]):
+        new_history["internal"][-1][1] = remove_alt_text_from_internal(
+            new_history["internal"][-1][1]
         )
 
-    if text_contains_comfyui_image(history["visible"][-1][1]):
-        history["visible"][-1][1] = remove_image_from_text(history["visible"][-1][1])
+    if text_contains_comfyui_image(new_history["visible"][-1][1]):
+        new_history["visible"][-1][1] = remove_image_from_text(
+            new_history["visible"][-1][1]
+        )
 
-    return history
+    return new_history
 
 
-def handle_remove_latest_image(chat_id: str, chat_html: str, state: dict):
-    history = state["history"]
+def handle_remove_latest_image(
+    chat_id: str, chat_html: str, history: dict[str, list[list[str]]], state: dict
+):
+    new_history = history
     html = chat_html
 
     if chat_id is not None:
-        history = remove_image_from_last_message(state)
-        m_chat.save_history(history, chat_id, state["character_menu"], state["mode"])
+        new_history = remove_image_from_last_message(new_history)
+        m_chat.save_history(
+            new_history, chat_id, state["character_menu"], state["mode"]
+        )
 
         html = m_chat.redraw_html(
             history,
@@ -156,18 +164,24 @@ def handle_remove_latest_image(chat_id: str, chat_html: str, state: dict):
             state["character_menu"],
         )
 
-    return [history, html]
+    return [new_history, html]
 
 
 def handle_send_image_message_click(
-    text: str, chat_id: str, chat_html: str, state: dict
+    text: str,
+    chat_id: str,
+    chat_html: str,
+    history: dict[str, list[list[str]]],
+    state: dict,
 ):
-    history = state["history"]
+    new_history = history
     html = chat_html
 
     if latest_image_tag is not None and alt_image_text is not None:
-        history = send_image_message(text, state)
-        m_chat.save_history(history, chat_id, state["character_menu"], state["mode"])
+        new_history = send_image_message(text, new_history, state)
+        m_chat.save_history(
+            new_history, chat_id, state["character_menu"], state["mode"]
+        )
 
         html = m_chat.redraw_html(
             history,
@@ -178,7 +192,10 @@ def handle_send_image_message_click(
             state["character_menu"],
         )
 
-    return [history, html, ""]
+    if CONFIG_HANDLER.unload_text_model_before_generating:
+        give_VRAM_priority_to("textgen")
+
+    return [new_history, html, ""]
 
 
 def comfyui_chat_panel_ui():
@@ -206,6 +223,12 @@ def comfyui_chat_panel_ui():
         open=False,
         elem_id="skdv_comfyui_generation_panel",
     ):
+        unload_text_model_checkbox = gr.Checkbox(
+            value=CONFIG_HANDLER.unload_text_model_before_generating,
+            label="Unload text model before generating image",
+            interactive=True,
+        )
+
         character_selected = gr.Markdown(
             value="### Editing prompts for: *None*",
         )
@@ -222,6 +245,13 @@ def comfyui_chat_panel_ui():
             interactive=True,
             label="Negative Prompt",
             lines=3,
+        )
+
+        unload_text_model_checkbox.input(
+            fn=lambda checked: CONFIG_HANDLER.set_unload_text_model_before_generating(
+                checked
+            ),
+            inputs=unload_text_model_checkbox,
         )
 
         shared.gradio["name2"].change(
@@ -265,7 +295,9 @@ def comfyui_chat_panel_ui():
         show_progress="hidden",
     ).then(
         fn=handle_send_image_message_click,
-        inputs=m_utils.gradio("Chat input", "unique_id", "display", "interface_state"),
+        inputs=m_utils.gradio(
+            "Chat input", "unique_id", "display", "history", "interface_state"
+        ),
         outputs=m_utils.gradio("history", "display", "Chat input"),
         show_progress="hidden",
     ).then(
@@ -276,7 +308,7 @@ def comfyui_chat_panel_ui():
 
     hover_menu_remove_image_button.click(
         fn=handle_remove_latest_image,
-        inputs=m_utils.gradio("unique_id", "display", "interface_state"),
+        inputs=m_utils.gradio("unique_id", "display", "history", "interface_state"),
         outputs=m_utils.gradio("history", "display"),
         show_progress="hidden",
     )
@@ -285,7 +317,7 @@ def comfyui_chat_panel_ui():
         lambda: gr.update(visible=True), outputs=generation_dots, show_progress="hidden"
     ).then(
         fn=handle_remove_latest_image,
-        inputs=m_utils.gradio("unique_id", "display", "interface_state"),
+        inputs=m_utils.gradio("unique_id", "display", "history", "interface_state"),
         outputs=m_utils.gradio("history", "display"),
         show_progress="hidden",
     ).then(
@@ -303,7 +335,9 @@ def comfyui_chat_panel_ui():
         show_progress="hidden",
     ).then(
         fn=handle_send_image_message_click,
-        inputs=m_utils.gradio("Chat input", "unique_id", "display", "interface_state"),
+        inputs=m_utils.gradio(
+            "Chat input", "unique_id", "display", "history", "interface_state"
+        ),
         outputs=m_utils.gradio("history", "display", "Chat input"),
         show_progress="hidden",
     ).then(

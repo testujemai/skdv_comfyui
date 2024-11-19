@@ -24,6 +24,7 @@ DEFAULT_CONFIG = {
     "shared_negative_prompt": "",
     "edit_before_generating": False,
     "interactive_mode": False,
+    "unload_text_model_before_generating": False,
 }
 
 dir_manager = DirManager()
@@ -65,32 +66,44 @@ class ConfigHandler:
 
         return cls.__instance
 
+    def __config_load_or_defaults(self, key: str):
+        if ConfigHandler.__loaded_config is None:
+            return DEFAULT_CONFIG[key]
+
+        if key not in ConfigHandler.__loaded_config.keys():
+            return DEFAULT_CONFIG[key]
+
+        return ConfigHandler.__loaded_config[key]
+
     def __init__(self):
         if ConfigHandler.__loaded_config is None:
             raise Exception(
                 "Attempted to load an empty configuration. Was .setup() called?"
             )
 
-        self._api_url: str = ConfigHandler.__loaded_config["api_url"]
-        self._current_workflow_file: str = ConfigHandler.__loaded_config[
+        self._api_url: str = self.__config_load_or_defaults("api_url")
+        self._current_workflow_file: str = self.__config_load_or_defaults(
             "current_workflow_file"
-        ]
-        self._model: str = ConfigHandler.__loaded_config["model"]
-        self._vae: str = ConfigHandler.__loaded_config["vae"]
-        self._width: int = ConfigHandler.__loaded_config["width"]
-        self._height: int = ConfigHandler.__loaded_config["height"]
-        self._sampler: str = ConfigHandler.__loaded_config["sampler"]
-        self._scheduler: str = ConfigHandler.__loaded_config["scheduler"]
-        self._steps: int = ConfigHandler.__loaded_config["steps"]
-        self._cfg_scale: float = ConfigHandler.__loaded_config["cfg_scale"]
-        self._clip_skip: int = ConfigHandler.__loaded_config["clip_skip"]
-        self._seed: int = ConfigHandler.__loaded_config["seed"]
-        self._shared_positive_prompt: str = ConfigHandler.__loaded_config[
+        )
+        self._model: str = self.__config_load_or_defaults("model")
+        self._vae: str = self.__config_load_or_defaults("vae")
+        self._width: int = self.__config_load_or_defaults("width")
+        self._height: int = self.__config_load_or_defaults("height")
+        self._sampler: str = self.__config_load_or_defaults("sampler")
+        self._scheduler: str = self.__config_load_or_defaults("scheduler")
+        self._steps: int = self.__config_load_or_defaults("steps")
+        self._cfg_scale: float = self.__config_load_or_defaults("cfg_scale")
+        self._clip_skip: int = self.__config_load_or_defaults("clip_skip")
+        self._seed: int = self.__config_load_or_defaults("seed")
+        self._shared_positive_prompt: str = self.__config_load_or_defaults(
             "shared_positive_prompt"
-        ]
-        self._shared_negative_prompt: str = ConfigHandler.__loaded_config[
+        )
+        self._shared_negative_prompt: str = self.__config_load_or_defaults(
             "shared_negative_prompt"
-        ]
+        )
+        self._unload_text_model_before_generating: bool = (
+            self.__config_load_or_defaults("unload_text_model_before_generating")
+        )
 
         self._character_prompts: list[CharacterPrompt] = []
         if ConfigHandler.__loaded_character_prompts is not None:
@@ -252,6 +265,14 @@ class ConfigHandler:
         self._shared_negative_prompt = prompt
         self.save()
 
+    @property
+    def unload_text_model_before_generating(self):
+        return self._unload_text_model_before_generating
+
+    def set_unload_text_model_before_generating(self, unload: bool):
+        self._unload_text_model_before_generating = unload
+        self.save()
+
     def get_character_prompts(self, character: str) -> CharacterPrompt | None:
         if character not in [chara.character for chara in self._character_prompts]:
             return None
@@ -287,4 +308,5 @@ class ConfigHandler:
             "seed": self._seed,
             "shared_positive_prompt": self._shared_positive_prompt,
             "shared_negative_prompt": self._shared_positive_prompt,
+            "unload_text_model_before_generating": self._unload_text_model_before_generating,
         }
