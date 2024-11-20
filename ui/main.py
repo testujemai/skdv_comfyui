@@ -4,6 +4,7 @@ from extensions.skdv_comfyui.ui.generation_parameters import generation_paramete
 from extensions.skdv_comfyui.ui.workflow_importer import workflow_importer_ui
 from extensions.skdv_comfyui.ui.character_parameters import character_parameters_ui
 from extensions.skdv_comfyui.ui.extensions_chat_panel import comfyui_chat_panel_ui
+from extensions.skdv_comfyui.ui.workflow_editor import workflow_editor_ui
 
 
 def mount_ui():
@@ -23,14 +24,8 @@ def mount_ui():
                     with gr.Column():
                         character_parameters_ui()
 
-        with gr.TabItem("General Settings"):
-            with gr.Column():
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("# General Settings")
-
         with gr.TabItem("ComfyUI Chat Panel", visible=False):
             comfyui_chat_panel_ui()
 
-        # with gr.TabItem("Workflow Editor"):
-        #     pass
+        with gr.TabItem("Workflow Editor"):
+            workflow_editor_ui()

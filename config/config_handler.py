@@ -75,6 +75,9 @@ class ConfigHandler:
 
         return ConfigHandler.__loaded_config[key]
 
+    def __str_or_none(self, string: str):
+        return string if string != "" else None
+
     def __init__(self):
         if ConfigHandler.__loaded_config is None:
             raise Exception(
@@ -82,15 +85,23 @@ class ConfigHandler:
             )
 
         self._api_url: str = self.__config_load_or_defaults("api_url")
-        self._current_workflow_file: str = self.__config_load_or_defaults(
-            "current_workflow_file"
+        self._current_workflow_file: str | None = self.__str_or_none(
+            self.__config_load_or_defaults("current_workflow_file")
         )
-        self._model: str = self.__config_load_or_defaults("model")
-        self._vae: str = self.__config_load_or_defaults("vae")
+        self._model: str | None = self.__str_or_none(
+            self.__config_load_or_defaults("model")
+        )
+        self._vae: str | None = self.__str_or_none(
+            self.__config_load_or_defaults("vae")
+        )
         self._width: int = self.__config_load_or_defaults("width")
         self._height: int = self.__config_load_or_defaults("height")
-        self._sampler: str = self.__config_load_or_defaults("sampler")
-        self._scheduler: str = self.__config_load_or_defaults("scheduler")
+        self._sampler: str | None = self.__str_or_none(
+            self.__config_load_or_defaults("sampler")
+        )
+        self._scheduler: str | None = self.__str_or_none(
+            self.__config_load_or_defaults("scheduler")
+        )
         self._steps: int = self.__config_load_or_defaults("steps")
         self._cfg_scale: float = self.__config_load_or_defaults("cfg_scale")
         self._clip_skip: int = self.__config_load_or_defaults("clip_skip")

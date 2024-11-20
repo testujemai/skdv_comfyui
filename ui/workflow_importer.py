@@ -14,7 +14,7 @@ dir_manager = DirManager()
 def parse_json_file(file_path: NamedString) -> dict:
     try:
         with open(file_path, "r") as file:
-            return json.load(file)
+            return json.loads(file.read())
     except json.JSONDecodeError or UnicodeDecodeError:
         return {"error": f"Invalid JSON file: '{file_path}'"}
 
@@ -40,7 +40,7 @@ def on_workflow_import(file_paths: list[NamedString] | None):
         if "error" in parsed.keys():
             return gr.update(interactive=False, variant="stop")
 
-        dir_manager.save_to_workflows(Path(file.name).name, json.dumps(file))
+        dir_manager.save_to_workflows(Path(file.name).name, json.dumps(parsed))
 
     gr.Info("Workflow(s) saved.")
     return gr.update(interactive=False, variant="stop"), gr.update(value=[])
