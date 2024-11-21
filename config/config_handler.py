@@ -317,6 +317,6 @@ class ConfigHandler:
             "clip_skip": self._clip_skip,
             "seed": self._seed,
             "shared_positive_prompt": self._shared_positive_prompt,
-            "shared_negative_prompt": self._shared_positive_prompt,
+            "shared_negative_prompt": self._shared_negative_prompt,
             "unload_text_model_before_generating": self._unload_text_model_before_generating,
         }

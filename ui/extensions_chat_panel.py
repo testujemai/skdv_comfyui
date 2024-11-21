@@ -54,9 +54,12 @@ def create_image_tag(image_path: Path, alt_image_text: str):
 
 
 def get_character_prompt(
-    prompt_type: Literal["positive"] | Literal["negative"],
+    prompt_type: Literal["positive", "negative"],
     character_name: str | None = None,
 ):
+    if (character_name or shared.gradio["name2"]) == "Example":
+        character_name = "Chiharu Yamada"
+
     character = CONFIG_HANDLER.get_character_prompts(
         character_name or shared.gradio["name2"].value
     )
@@ -197,7 +200,10 @@ def handle_send_image_message_click(
         )
 
     if CONFIG_HANDLER.unload_text_model_before_generating:
-        give_VRAM_priority_to("textgen")
+        try:
+            give_VRAM_priority_to("textgen")
+        except ValueError:
+            print("Failed to give VRAM priority to textgen. Did you have a model loaded before generating an image?")
 
     return [new_history, html, ""]
 

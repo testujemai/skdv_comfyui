@@ -23,6 +23,12 @@ def custom_css():
 def custom_js():
     return load_skdv_comfyui_resource("skdv_comfyui.js")
 
-
+mount_for_tab = True
 def ui():
-    comfyui.mount_ui()
+    global mount_for_tab
+
+    comfyui.mount_ui(mount_for_tab)
+
+    if mount_for_tab: # Made to mount both as Tab and in Extension Block
+        mount_for_tab = False
+        params["is_tab"] = False

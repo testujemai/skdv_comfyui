@@ -174,8 +174,8 @@ def workflow_editor_ui():
                 ),
                 label="Workflow is Valid?",
                 interactive=False,
-                lines=3,
-                info='Please use this as a guide. Some errors may be misleading. Tips: Make sure all curly braces open and close, No random characters out of place, Always close quotes ""',
+                lines=4,
+                info='Please use this as a guide. Some errors may be misleading. Tips: Make sure all curly braces open and close, Make sure there are no random characters out of place, Always close quotes ""',
             )
 
         with gr.Column(scale=3):

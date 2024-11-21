@@ -27,11 +27,11 @@ def character_parameters_ui():
         lines=3,
     )
 
-    shared_positive_prompt_input.input(
+    shared_positive_prompt_input.change(
         fn=lambda prompt: config_handler.set_shared_positive_prompt(prompt),
         inputs=shared_positive_prompt_input,
     )
-    shared_negative_prompt_input.input(
+    shared_negative_prompt_input.change(
         fn=lambda prompt: config_handler.set_shared_negative_prompt(prompt),
         inputs=shared_negative_prompt_input,
     )
