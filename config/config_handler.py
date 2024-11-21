@@ -148,7 +148,6 @@ class ConfigHandler:
         return instance
 
     def save(self):
-        print("saving")
         config_file_path = dir_manager.get_or_create(
             dir_manager.create_path_from_config("config.json")
         )

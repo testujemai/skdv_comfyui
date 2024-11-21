@@ -87,6 +87,10 @@ def generate_image(character: str, positive: str, negative: str):
     if not ComfyAPI.ping():
         return gr.update()
 
+    if CONFIG_HANDLER.current_workflow_file is None:
+        gr.Error("No workflow selected")
+        raise ValueError("No workflow selected")
+
     if CONFIG_HANDLER.unload_text_model_before_generating:
         give_VRAM_priority_to("imagegen")
 
@@ -267,12 +271,12 @@ def comfyui_chat_panel_ui():
             outputs=[character_positive_prompt_input, character_negative_prompt_input],
         )
 
-        character_positive_prompt_input.input(
+        character_positive_prompt_input.change(
             fn=lambda prompt, state: save_character_prompt(prompt, True, state),
             inputs=[character_positive_prompt_input]
             + m_utils.gradio("interface_state"),
         )
-        character_negative_prompt_input.input(
+        character_negative_prompt_input.change(
             fn=lambda prompt, state: save_character_prompt(prompt, False, state),
             inputs=[character_negative_prompt_input]
             + m_utils.gradio("interface_state"),

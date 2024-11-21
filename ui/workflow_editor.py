@@ -23,7 +23,11 @@ def load_workflow(workflow_file: str | None):
     file_path = dir_manager.get_from_workflows(workflow_file)
 
     with open(file_path, "r") as workflow:
-        return json.dumps(json.load(workflow), indent=4)
+        read_file = workflow.read()
+        try:
+            return json.dumps(json.loads(read_file), indent=4)
+        except json.JSONDecodeError:
+            return read_file
 
 
 def save_workflow(workflow_file: str, content: str):
@@ -76,6 +80,17 @@ def update_checks_with_file_content(file_content: str):
         variables[var] = workflow_has_variable(var)
 
     return [value for value in variables.values()]
+
+
+def validate_json_editor(content: str):
+    validity_msg = "JSON is valid."
+    try:
+        json.loads(content)
+    except json.JSONDecodeError as err:
+        validity_msg = "JSON is not valid:\n"
+        validity_msg += f"- Error: {err.msg} - line {err.lineno}, column {err.colno}\n"
+
+    return validity_msg
 
 
 def workflow_editor_ui():
@@ -153,6 +168,16 @@ def workflow_editor_ui():
                 value=workflow_has_variable("seed"), label=wrap_variable("seed")
             )
 
+            validity_textbox = gr.TextArea(
+                value=validate_json_editor(
+                    load_workflow(config_handler.current_workflow_file)
+                ),
+                label="Workflow is Valid?",
+                interactive=False,
+                lines=3,
+                info='Please use this as a guide. Some errors may be misleading. Tips: Make sure all curly braces open and close, No random characters out of place, Always close quotes ""',
+            )
+
         with gr.Column(scale=3):
             with gr.Row():
                 code_editor = gr.Code(
@@ -190,6 +215,10 @@ def workflow_editor_ui():
             char_avatar_check,
             seed_check,
         ],
+    ).then(
+        fn=lambda wkflw: validate_json_editor(wkflw),
+        inputs=code_editor,
+        outputs=validity_textbox,
     )
 
     code_editor.change(
@@ -211,4 +240,8 @@ def workflow_editor_ui():
             char_avatar_check,
             seed_check,
         ],
+    ).then(
+        fn=lambda wkflw: validate_json_editor(wkflw),
+        inputs=code_editor,
+        outputs=validity_textbox,
     )

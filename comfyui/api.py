@@ -76,9 +76,17 @@ class ComfyAPI:
         import json
 
         raw_workflow, seed = workflow.inject_parameters()
+
+        try:
+            loaded_workflow = json.loads(raw_workflow)
+        except json.JSONDecodeError:
+            raise ValueError(
+                "The workflow loaded is not valid for generation. Please check the JSON File."
+            )
+
         response = requests.post(
             CONFIG_HANDLER.api_url + "/prompt",
-            json={"prompt": json.loads(raw_workflow)},
+            json={"prompt": loaded_workflow},
         )
         response.raise_for_status()
         response = response.json()
