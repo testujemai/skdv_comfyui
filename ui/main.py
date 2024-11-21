@@ -7,7 +7,11 @@ from extensions.skdv_comfyui.ui.extensions_chat_panel import comfyui_chat_panel_
 from extensions.skdv_comfyui.ui.workflow_editor import workflow_editor_ui
 
 
-def mount_ui():
+def mount_ui(mount_for_tab: bool):
+    if not mount_for_tab:
+        comfyui_chat_panel_ui()
+        return
+
     with gr.Tabs(elem_id="skdv_comfyui_tabs"):
         with gr.TabItem("Generation Settings"):
             with gr.Column():
@@ -24,8 +28,8 @@ def mount_ui():
                     with gr.Column():
                         character_parameters_ui()
 
-        with gr.TabItem("ComfyUI Chat Panel", visible=False):
-            comfyui_chat_panel_ui()
+        #with gr.TabItem("ComfyUI Chat Panel"):
+        #    comfyui_chat_panel_ui()
 
         with gr.TabItem("Workflow Editor"):
             workflow_editor_ui()
