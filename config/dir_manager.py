@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import json
 
 class DirManager:
     __instance = None
@@ -9,6 +9,8 @@ class DirManager:
     __WORKFLOW_DIR = __EXT_DIR.joinpath("workflows")
     __GENERATED_IMAGES_DIR = __EXT_DIR.joinpath("generated")
     __CONFIG_DIR = __EXT_DIR.joinpath("config")
+
+    __VERSION_FILE = __CONFIG_DIR.joinpath("version.json")
 
     def __new__(cls) -> "DirManager":
         if cls.__instance is None:
@@ -121,3 +123,11 @@ class DirManager:
             DirManager.__WORKFLOW_DIR.joinpath(workflow_file_name), content
         )
         return DirManager.__WORKFLOW_DIR.joinpath(workflow_file_name)
+
+    def save_to_extension_version(self, version: str):
+        self.__write_to_file(self.__VERSION_FILE, json.dumps({"version": version}))
+        return self.__VERSION_FILE
+
+    def get_extension_version(self):
+        self.__check_source_exists(self.__VERSION_FILE)
+        return self.__VERSION_FILE

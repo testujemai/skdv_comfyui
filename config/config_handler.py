@@ -2,7 +2,7 @@ import json
 
 from extensions.skdv_comfyui.config.dir_manager import DirManager
 
-__version__ = "0.0.0"
+__version__ = "0.9.0"
 """
 This extensions version.
 """
@@ -84,6 +84,7 @@ class ConfigHandler:
                 "Attempted to load an empty configuration. Was .setup() called?"
             )
 
+        self._version: str = self.__get_local_version()
         self._api_url: str = self.__config_load_or_defaults("api_url")
         self._current_workflow_file: str | None = self.__str_or_none(
             self.__config_load_or_defaults("current_workflow_file")
@@ -147,6 +148,32 @@ class ConfigHandler:
         instance.save()
         return instance
 
+    def __local_version_fixer(self, json_data: dict | None):
+        """
+        Check and updates the local version in the config file.
+        """
+
+        if json_data is None:
+            DirManager().save_to_extension_version(__version__)
+            return __version__
+
+        local_version: str | None = json_data.get("version")
+
+        if local_version is None and __version__ != local_version:
+            print("[skdv_comfyui] Local version and extension version do not match. Correct with extension version.")
+            DirManager().save_to_extension_version(__version__)
+
+        return __version__
+
+    def __get_local_version(self):
+        try:
+            with open(DirManager().get_extension_version(), 'r') as version_file:
+                version_dict = json.load(version_file)
+        except FileNotFoundError:
+            version_dict = None
+
+        return self.__local_version_fixer(version_dict)
+
     def save(self):
         config_file_path = dir_manager.get_or_create(
             dir_manager.create_path_from_config("config.json")
@@ -162,6 +189,10 @@ class ConfigHandler:
                 {c.character: [c.positive, c.negative] for c in self._character_prompts}
             ),
         )
+
+    @property
+    def version(self):
+        return self._version
 
     @property
     def api_url(self):
