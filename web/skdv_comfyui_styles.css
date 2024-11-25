@@ -2,6 +2,20 @@
 /* *** SKDV COMFYUI  EXT STYLING *** */
 /* ********************************* */
 
+#skdv_prompt_editor > div {
+  border-radius: 8px;
+}
+
+#skdv_confirm_prompts_buttons {
+  margin: 10px 0;
+  align-items: center;
+  justify-content: center;
+}
+
+#skdv_confirm_prompts_buttons > button {
+  margin: 0 10px;
+  border-radius: 8px;
+}
 
 .skdv-full-height-btn {
   height: 100%;
@@ -61,6 +75,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+}
+
+.skdv-image-previewer > p {
+  max-width: 75%;
+  text-align: center;
 }
 
 .skdv-expanded-image {

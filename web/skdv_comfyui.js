@@ -63,6 +63,22 @@
   originalTypyingDots.parentElement.insertBefore(dots, originalTypyingDots.parentElement.firstChild);
 })();
 
+(() => {
+  const rootComponent = document.getElementById("component-0");
+  if (rootComponent == null) {
+    console.error("[skdv_comfyui] Could not find component-0.");
+    return;
+  }
+
+  const promptEditor = document.getElementById("skdv_prompt_editor");
+  if (promptEditor == null) {
+    console.error("[skdv_comfyui] Could not find prompt editor dialog.");
+    return;
+  }
+
+  rootComponent.insertBefore(promptEditor, rootComponent.firstChild);
+})();
+
 /** @param {HTMLImageElement} sourceImageTag **/
 function skdvExpandImage(sourceImageTag) {
   const mainDiv = document.createElement('div');
@@ -83,8 +99,14 @@ function skdvExpandImage(sourceImageTag) {
     mainDiv.remove();
   };
 
+  const descriptionP = document.createElement("p");
+  let altText = sourceImageTag.alt;
+  altText = altText.substring(altText.indexOf("<skdv_comfyui")+14, altText.indexOf("skdv_comfyui/>")-1);
+  descriptionP.innerHTML = altText;
+
   mainDiv.appendChild(imageTag);
   mainDiv.appendChild(closeImageTag);
+  mainDiv.appendChild(descriptionP);
   document.body.appendChild(mainDiv);
 }
 const skdvcomfy_script = document.createElement('script');

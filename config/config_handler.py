@@ -2,7 +2,7 @@ import json
 
 from extensions.skdv_comfyui.config.dir_manager import DirManager
 
-__version__ = "0.9.0"
+__version__ = "0.9.5"
 """
 This extensions version.
 """
@@ -25,6 +25,7 @@ DEFAULT_CONFIG = {
     "edit_before_generating": False,
     "interactive_mode": False,
     "unload_text_model_before_generating": False,
+    "edit_prompt_before_generating": False,
 }
 
 dir_manager = DirManager()
@@ -116,6 +117,7 @@ class ConfigHandler:
         self._unload_text_model_before_generating: bool = (
             self.__config_load_or_defaults("unload_text_model_before_generating")
         )
+        self._edit_prompt_before_generating: bool = self.__config_load_or_defaults("edit_prompt_before_generating")
 
         self._character_prompts: list[CharacterPrompt] = []
         if ConfigHandler.__loaded_character_prompts is not None:
@@ -159,7 +161,7 @@ class ConfigHandler:
 
         local_version: str | None = json_data.get("version")
 
-        if local_version is None and __version__ != local_version:
+        if local_version is not None and __version__ != local_version:
             print("[skdv_comfyui] Local version and extension version do not match. Correct with extension version.")
             DirManager().save_to_extension_version(__version__)
 
@@ -314,6 +316,14 @@ class ConfigHandler:
         self._unload_text_model_before_generating = unload
         self.save()
 
+    @property
+    def edit_prompt_before_generating(self):
+        return self._edit_prompt_before_generating
+
+    def set_edit_prompt_before_generating(self, use_edit: bool):
+        self._edit_prompt_before_generating = use_edit
+        self.save()
+
     def get_character_prompts(self, character: str) -> CharacterPrompt | None:
         if character not in [chara.character for chara in self._character_prompts]:
             return None
@@ -350,4 +360,5 @@ class ConfigHandler:
             "shared_positive_prompt": self._shared_positive_prompt,
             "shared_negative_prompt": self._shared_negative_prompt,
             "unload_text_model_before_generating": self._unload_text_model_before_generating,
+            "edit_prompt_before_generating": self._edit_prompt_before_generating,
         }
