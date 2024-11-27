@@ -5,9 +5,11 @@ import html
 
 import modules.chat as m_chat
 import modules.utils as m_utils
+from modules import text_generation
 from modules import shared
 
 
+from extensions.skdv_comfyui.textgen.generate import generate_image_description_from_message
 from extensions.skdv_comfyui.textgen.utils import give_VRAM_priority_to
 from extensions.skdv_comfyui.comfyui.api import ComfyAPI
 from extensions.skdv_comfyui.comfyui.workflow import ComfyWorkflow
@@ -20,6 +22,7 @@ latest_image_tag = None
 alt_image_text = None
 prompt_editor_with_raw = False
 main_prompt_to_generate = ""
+generated_prompt_has_error = False
 
 
 def history_is_blank(history: dict):
@@ -244,8 +247,11 @@ def change_main_prompt(new_prompt: str):
 
     main_prompt_to_generate = new_prompt
 
-def generate_positive_prompt_from_message(history: dict, return_raw=False, confirms_prompt=False, regenerate=False):
-    global main_prompt_to_generate
+def generate_positive_prompt_from_message(history: dict, state: dict, return_raw=False, confirms_prompt=False, regenerate=False):
+    global main_prompt_to_generate, generated_prompt_has_error
+
+    generated_prompt_has_error = False
+
     if regenerate:
         return main_prompt_to_generate
 
@@ -257,16 +263,36 @@ def generate_positive_prompt_from_message(history: dict, return_raw=False, confi
     if return_raw or prompt_editor_with_raw:
         return history["internal"][-1][1]
 
-    # generate prompt
-    generated_prompt = "generated_prompt"
-    change_main_prompt(generated_prompt)
+    try:
+        generated_prompt = generate_image_description_from_message(history["internal"][-1][1], state)
+        change_main_prompt(generated_prompt)
+    except ValueError as e:
+        gr.Warning(e)
+        generated_prompt_has_error = True
+        generated_prompt = ""
 
     return generated_prompt
+
+def show_prompt_editor_box(confirms_prompt=False):
+    global generated_prompt_has_error
+    return not confirms_prompt and CONFIG_HANDLER.edit_prompt_before_generating and not generated_prompt_has_error
 
 
 def mount_generate_events(btn_component: gr.Button, regenerate_event=False, raw_prompt=False, confirms_prompt=False):
     event_dependencies = btn_component.click(
         lambda: gr.update(visible=True), outputs=shared_ui["generation_dots"], show_progress="hidden"
+    ).then(
+        fn=lambda: set_prompt_raw(raw_prompt, regenerate_event or confirms_prompt)
+    ).then(
+        fn=lambda prompt, state: generate_positive_prompt_from_message(
+            prompt,
+            state,
+            return_raw=raw_prompt,
+            confirms_prompt=confirms_prompt,
+            regenerate=regenerate_event
+        ),
+        inputs=m_utils.gradio("history", "interface_state"),
+        outputs=[shared_ui["prompts_textarea"]]
     )
     
     if regenerate_event:
@@ -278,17 +304,6 @@ def mount_generate_events(btn_component: gr.Button, regenerate_event=False, raw_
     )
 
     event_dependencies.then(
-        fn=lambda: set_prompt_raw(raw_prompt, regenerate_event or confirms_prompt)
-    ).then(
-        fn=lambda prompt: generate_positive_prompt_from_message(
-            prompt,
-            return_raw=raw_prompt,
-            confirms_prompt=confirms_prompt,
-            regenerate=regenerate_event
-        ),
-        inputs=m_utils.gradio("history"),
-        outputs=[shared_ui["prompts_textarea"]]
-    ).then(
         fn=lambda chara, pos, neg: generate_image(
             chara,
             pos,
@@ -325,7 +340,7 @@ def mount_generate_events(btn_component: gr.Button, regenerate_event=False, raw_
         outputs=shared_ui["generation_dots"],
         show_progress="hidden",
     ).then(
-        fn=lambda: gr.update(visible=not confirms_prompt and CONFIG_HANDLER.edit_prompt_before_generating),
+        fn=lambda: gr.update(visible=show_prompt_editor_box()),
         outputs=shared_ui["confirm_prompts_box"],
     )
 
@@ -365,6 +380,41 @@ def confirm_prompts_for_generation_dialog():
 
     return confirm_prompt_generate
 
+def comfyui_hover_menu_buttons_ui():
+    hover_menu_generate_button = gr.Button(
+        "Gen. image: last message", elem_id="skdv_comfyui_button_generate"
+    )
+
+    hover_menu_generate_raw_button = gr.Button(
+        "Gen. image: raw last message", elem_id="skdv_comfyui_button_generate_raw"
+    )
+
+    hover_menu_regenerate_button = gr.Button(
+        "Re-gen. last image", elem_id="skdv_comfyui_button_regenerate"
+    )
+
+    hover_menu_remove_image_button = gr.Button(
+        "Remove last image", elem_id="skdv_comfyui_button_remove_image"
+    )
+
+    hover_menu_stop_prompt_generation = gr.Button(
+        "Stop image prompt generation", elem_id="skdv_comfyui_button_stop_prompt_generation"
+    )
+
+    mount_generate_events(hover_menu_generate_button)
+    mount_generate_events(hover_menu_generate_raw_button, raw_prompt=True)
+    mount_generate_events(hover_menu_regenerate_button, regenerate_event=True)
+
+    hover_menu_remove_image_button.click(
+        fn=handle_remove_latest_image,
+        inputs=m_utils.gradio("unique_id", "display", "history", "interface_state"),
+        outputs=m_utils.gradio("history", "display"),
+        show_progress="hidden",
+    )
+
+    hover_menu_stop_prompt_generation.click(
+        fn=text_generation.stop_everything_event
+    )
 
 def comfyui_chat_panel_ui():
     shared_ui["generation_dots"] = gr.HTML(
@@ -372,22 +422,6 @@ def comfyui_chat_panel_ui():
         label="typing",
         elem_id="skdv_comfyui_generating_dots",
         visible=False,
-    )
-
-    hover_menu_generate_button = gr.Button(
-        "Generate image: last message", elem_id="skdv_comfyui_button_generate"
-    )
-
-    hover_menu_generate_raw_button = gr.Button(
-        "Generate image: raw last message", elem_id="skdv_comfyui_button_generate_raw"
-    )
-
-    hover_menu_regenerate_button = gr.Button(
-        "Re-generate last image", elem_id="skdv_comfyui_button_regenerate"
-    )
-
-    hover_menu_remove_image_button = gr.Button(
-        "Remove last image", elem_id="skdv_comfyui_button_remove_image"
     )
 
     confirm_generation_dialog_button = confirm_prompts_for_generation_dialog()
@@ -463,16 +497,6 @@ def comfyui_chat_panel_ui():
             + m_utils.gradio("interface_state"),
         )
 
-    mount_generate_events(hover_menu_generate_button)
-    mount_generate_events(hover_menu_generate_raw_button, raw_prompt=True)
-    mount_generate_events(hover_menu_regenerate_button, regenerate_event=True)
     mount_generate_events(confirm_generation_dialog_button, confirms_prompt=True)
 
-
-    hover_menu_remove_image_button.click(
-        fn=handle_remove_latest_image,
-        inputs=m_utils.gradio("unique_id", "display", "history", "interface_state"),
-        outputs=m_utils.gradio("history", "display"),
-        show_progress="hidden",
-    )
 

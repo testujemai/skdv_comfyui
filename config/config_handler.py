@@ -2,10 +2,45 @@ import json
 
 from extensions.skdv_comfyui.config.dir_manager import DirManager
 
-__version__ = "0.9.5"
+__version__ = "1.0.0"
 """
 This extensions version.
 """
+
+DEFAULT_IMAGE_DESCRIPTOR_PROMPT = """Convert text messages into comma-separated image generation descriptors.
+
+## Critical Rules
+OUTPUT MUST ONLY BE COMMA-SEPARATED VALUES
+Use specific, visual terms
+Parentheses () for emphasized details
+Prioritize direct visual representation
+((((The output must only contain comma separated values. Use many descriptors.))))
+(((Produce only one output. DO NOT REPEAT THE INPUT MESSAGE.)))
+(Do not explain. Do not elaborate. Do not use bullet points.)
+
+## Categories to consider
+- Character type
+- Character pose
+- Emotions and expressions
+- Clothing and accessories
+- Background and environment
+- Lighting and mood
+- Specific objects mentioned
+- Art style or rendering technique
+
+## Example Format
+Input: "I love teddy bears!"
+Output: 1girl, (teddy bear plushie), smiling
+
+Input: "Just finished my coding project!"
+Output: 1person, sitting at desk, computer screen, (concentrated expression), coding, programming, workspace, laptop
+
+## Your Task
+Output exactly in this format: descriptor1, descriptor2, (emphasized_descriptor), additional_descriptors, ...
+Translate this message into comma-separated descriptors:
+Message: "%message%"
+
+PROMPT="""
 
 DEFAULT_CONFIG = {
     "api_url": "http://127.0.0.1:8188",
@@ -26,6 +61,7 @@ DEFAULT_CONFIG = {
     "interactive_mode": False,
     "unload_text_model_before_generating": False,
     "edit_prompt_before_generating": False,
+    "image_descriptor_prompt": DEFAULT_IMAGE_DESCRIPTOR_PROMPT
 }
 
 dir_manager = DirManager()
@@ -82,7 +118,7 @@ class ConfigHandler:
     def __init__(self):
         if ConfigHandler.__loaded_config is None:
             raise Exception(
-                "Attempted to load an empty configuration. Was .setup() called?"
+                "Attempted to load an empty configuration. Was ConfigHandler.setup() called?"
             )
 
         self._version: str = self.__get_local_version()
@@ -118,6 +154,7 @@ class ConfigHandler:
             self.__config_load_or_defaults("unload_text_model_before_generating")
         )
         self._edit_prompt_before_generating: bool = self.__config_load_or_defaults("edit_prompt_before_generating")
+        self._image_descriptor_prompt: str = self.__config_load_or_defaults("image_descriptor_prompt")
 
         self._character_prompts: list[CharacterPrompt] = []
         if ConfigHandler.__loaded_character_prompts is not None:
@@ -125,6 +162,8 @@ class ConfigHandler:
                 self._character_prompts.append(
                     CharacterPrompt(chara, prompts[0], prompts[1])
                 )
+
+        self.save()
 
     @staticmethod
     def setup():
@@ -151,25 +190,21 @@ class ConfigHandler:
         return instance
 
     def __local_version_fixer(self, json_data: dict | None):
-        """
-        Check and updates the local version in the config file.
-        """
-
         if json_data is None:
-            DirManager().save_to_extension_version(__version__)
+            dir_manager.save_to_extension_version(__version__)
             return __version__
 
         local_version: str | None = json_data.get("version")
 
         if local_version is not None and __version__ != local_version:
             print("[skdv_comfyui] Local version and extension version do not match. Correct with extension version.")
-            DirManager().save_to_extension_version(__version__)
+            dir_manager.save_to_extension_version(__version__)
 
         return __version__
 
     def __get_local_version(self):
         try:
-            with open(DirManager().get_extension_version(), 'r') as version_file:
+            with open(dir_manager.get_extension_version(), 'r') as version_file:
                 version_dict = json.load(version_file)
         except FileNotFoundError:
             version_dict = None
@@ -324,6 +359,14 @@ class ConfigHandler:
         self._edit_prompt_before_generating = use_edit
         self.save()
 
+    @property
+    def image_descriptor_prompt(self):
+        return self._image_descriptor_prompt
+
+    def set_image_descriptor_prompt(self, new_prompt: str):
+        self._image_descriptor_prompt = new_prompt
+        self.save()
+
     def get_character_prompts(self, character: str) -> CharacterPrompt | None:
         if character not in [chara.character for chara in self._character_prompts]:
             return None
@@ -361,4 +404,5 @@ class ConfigHandler:
             "shared_negative_prompt": self._shared_negative_prompt,
             "unload_text_model_before_generating": self._unload_text_model_before_generating,
             "edit_prompt_before_generating": self._edit_prompt_before_generating,
+            "image_descriptor_prompt": self._image_descriptor_prompt,
         }
