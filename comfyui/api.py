@@ -81,7 +81,7 @@ class ComfyAPI:
             loaded_workflow = json.loads(raw_workflow)
         except json.JSONDecodeError:
             raise ValueError(
-                "The workflow loaded is not valid for generation. Please check the JSON File."
+                "[skdv_comfyui] The workflow loaded is not valid for generation. Please check the JSON File."
             )
 
         response = requests.post(

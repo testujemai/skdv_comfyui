@@ -113,14 +113,29 @@ def generate_image(character: str, positive: str, negative: str, prompt_confirme
     latest_image_tag = None
     alt_image_text = None
 
+    if positive == "":
+        alt_prompt = main_prompt_to_generate
+    else:
+        alt_prompt = positive + ", " + main_prompt_to_generate
+
     workflow = ComfyWorkflow(CONFIG_HANDLER.current_workflow_file)
-    workflow.set_positive_prompt(positive + ", " + main_prompt_to_generate)
+    workflow.set_positive_prompt(alt_prompt)
     workflow.set_negative_prompt(negative)
     workflow.set_character(character)
 
-    image_path, seed = ComfyAPI.generate(workflow)
+    required_gen_fields = [CONFIG_HANDLER.model, CONFIG_HANDLER.vae, CONFIG_HANDLER.sampler, CONFIG_HANDLER.scheduler]
+    if any(v is None for v in required_gen_fields):
+        gr.Warning("Model, Vae, Sampler and Scheduler need to be selected before generation.")
+        return gr.update()
 
-    alt_image_text = f"<skdv_comfyui seed: {seed}, prompt: {positive + ', ' + main_prompt_to_generate} skdv_comfyui/>"
+    try:
+        image_path, seed = ComfyAPI.generate(workflow)
+    except ValueError as e:
+        print(e)
+        gr.Warning("The workflow is not valid. Please check the editor for more info.")
+        return gr.update()
+
+    alt_image_text = f"<skdv_comfyui seed: {seed}, prompt: {alt_prompt} skdv_comfyui/>"
     latest_image_tag = create_image_tag(image_path, alt_image_text)
     return gr.update(value=seed)
 

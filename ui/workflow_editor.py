@@ -120,6 +120,16 @@ def workflow_editor_ui():
                 "## Available variables \nDisplays what variables are currently being used in the workflow"
             )
 
+            valid_json_textbox = gr.TextArea(
+                value=validate_json_editor(
+                    load_workflow(config_handler.current_workflow_file)
+                ),
+                label="Workflow is Valid?",
+                interactive=False,
+                lines=4,
+                info='Please use this as a guide. Some errors may be misleading. Tips: Make sure all curly braces open and close, Make sure there are no random characters out of place, Always close quotes ""',
+            )
+
             prompt_check = gr.Checkbox(
                 value=workflow_has_variable("prompt"), label=wrap_variable("prompt")
             )
@@ -168,16 +178,6 @@ def workflow_editor_ui():
                 value=workflow_has_variable("seed"), label=wrap_variable("seed")
             )
 
-            validity_textbox = gr.TextArea(
-                value=validate_json_editor(
-                    load_workflow(config_handler.current_workflow_file)
-                ),
-                label="Workflow is Valid?",
-                interactive=False,
-                lines=4,
-                info='Please use this as a guide. Some errors may be misleading. Tips: Make sure all curly braces open and close, Make sure there are no random characters out of place, Always close quotes ""',
-            )
-
         with gr.Column(scale=3):
             with gr.Row():
                 code_editor = gr.Code(
@@ -218,7 +218,7 @@ def workflow_editor_ui():
     ).then(
         fn=lambda wkflw: validate_json_editor(wkflw),
         inputs=code_editor,
-        outputs=validity_textbox,
+        outputs=valid_json_textbox,
     )
 
     code_editor.change(
@@ -243,5 +243,5 @@ def workflow_editor_ui():
     ).then(
         fn=lambda wkflw: validate_json_editor(wkflw),
         inputs=code_editor,
-        outputs=validity_textbox,
+        outputs=valid_json_textbox,
     )
