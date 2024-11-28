@@ -2,6 +2,7 @@
 
 <img src="docs/logos.svg" style="width: 100%;" alt="Images">
 <br/>
+<br/>
 
 >This extension provides image generation from ComfyUI inside oobabooga's text generation webui.
 
