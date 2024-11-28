@@ -1,9 +1,7 @@
 # SKDV's ComfyUI Image Generation
 
-<div style="display: flex; justify-content: center; align-items: center;">
-	<img src="https://seeklogo.com/images/G/gradio-icon-logo-908AE1836C-seeklogo.com.png" height=80 alt="Text Generation WebUI"/>
-	<img src="https://cdn.icon-icons.com/icons2/2352/PNG/512/connect_icon_143211.png" width=125 alt="Connection Gradio ComfyUI" style="rotate: 45deg; margin: 0 20px;">
-	<img src="https://framerusercontent.com/images/7Nhoxwn9eWYrqKjEewfXutR90U.png" width=85 alt="ComfyUI">
+<div style="width: 100%;">
+   <img src="docs/logos.svg" style="width: 100%;" alt="Images">
 </div>
 <br/>
 
