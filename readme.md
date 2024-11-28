@@ -1,5 +1,12 @@
 # SKDV's ComfyUI Image Generation
 
+<div style="display: flex; justify-content: center; align-items: center;">
+	<img src="https://seeklogo.com/images/G/gradio-icon-logo-908AE1836C-seeklogo.com.png" height=80 alt="Text Generation WebUI"/>
+	<img src="https://cdn.icon-icons.com/icons2/2352/PNG/512/connect_icon_143211.png" width=125 alt="Connection Gradio ComfyUI" style="rotate: 45deg; margin: 0 20px;">
+	<img src="https://framerusercontent.com/images/7Nhoxwn9eWYrqKjEewfXutR90U.png" width=85 alt="ComfyUI">
+</div>
+<br/>
+
 >This extension provides image generation from ComfyUI inside oobabooga's text generation webui.
 
 >**Disclaimer**: this extension is in no way, shape or form associated with ComfyUI or SillyTavern.
