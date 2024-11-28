@@ -35,7 +35,7 @@ def create_ext_updater():
     )
 
 def update_checker_ui():
-    if ExtUpdateManager.check_for_updates(CONFIG_HANLDER) and False:
+    if ExtUpdateManager.check_for_updates(CONFIG_HANLDER):
         create_ext_updater()
     else:
         gr.Button(

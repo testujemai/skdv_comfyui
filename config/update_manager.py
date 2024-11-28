@@ -17,4 +17,4 @@ class ExtUpdateManager:
         online_version = online_config.get("version")
         local_version = config.version
 
-        return True if online_version is None else local_version != online_version
+        return False if online_version is None else local_version != online_version
