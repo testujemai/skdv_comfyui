@@ -1,8 +1,6 @@
 # SKDV's ComfyUI Image Generation
 
-<div style="width: 100%;">
-   <img src="docs/logos.svg" style="width: 100%;" alt="Images">
-</div>
+<img src="docs/logos.svg" style="width: 100%;" alt="Images">
 <br/>
 
 >This extension provides image generation from ComfyUI inside oobabooga's text generation webui.
