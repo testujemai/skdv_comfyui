@@ -2,9 +2,9 @@
   <foreignObject width="100%" height="100%">
   <div xmlns="http://www.w3.org/1999/xhtml">
     <p align="center" style="display: flex; justify-content: center; align-items: center;">
-			<img src="./gradio-icon.png" height="80px" alt="Text Generation WebUI"/>
-			<img src="./connect-icon.webp" width="125px" alt="Connection Gradio ComfyUI" style="rotate: 45deg; margin: 0 20px;"/>
-			<img src="./comfyui-icon.avif" width="85px" alt="ComfyUI"/>
+			<img src="https://raw.githubusercontent.com/SkinnyDevi/skdv_comfyui/refs/heads/develop/docs/gradio-icon.png" height="80px" alt="Text Generation WebUI"/>
+			<img src="https://raw.githubusercontent.com/SkinnyDevi/skdv_comfyui/refs/heads/develop/docs/connect-icon.webp" width="125px" alt="Connection Gradio ComfyUI" style="rotate: 45deg; margin: 0 20px;"/>
+			<img src="https://raw.githubusercontent.com/SkinnyDevi/skdv_comfyui/refs/heads/develop/docs/comfyui-icon.avif" width="85px" alt="ComfyUI"/>
 		</p>
   </div>
   </foreignObject>
