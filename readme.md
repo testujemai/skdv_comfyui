@@ -53,7 +53,7 @@ To activate the extension, you must add the following to an existing line or new
 
 With this, the extension activates and you will see upon restart of the WebUI a new section with the extension contents.
 
-For more information on how to install and activate extensions, please refer to the [original documentation by oobaboga](https://github.com/oobabooga/text-generation-webui/blob/main/docs/Extensions.md).
+For more information on how to install and activate extensions, please refer to the [original documentation by oobaboga](https://github.com/oobabooga/text-generation-webui/blob/main/docs/07%20-%20Extensions.md).
 
 ## General Advice
 
