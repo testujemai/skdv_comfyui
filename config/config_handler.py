@@ -46,7 +46,6 @@ DEFAULT_CONFIG = {
     "api_url": "http://127.0.0.1:8188",
     "current_workflow_file": "",
     "model": "",
-    "vae": "",
     "width": 512,
     "height": 512,
     "sampler": "",
@@ -128,9 +127,6 @@ class ConfigHandler:
         )
         self._model: str | None = self.__str_or_none(
             self.__config_load_or_defaults("model")
-        )
-        self._vae: str | None = self.__str_or_none(
-            self.__config_load_or_defaults("vae")
         )
         self._width: int = self.__config_load_or_defaults("width")
         self._height: int = self.__config_load_or_defaults("height")
@@ -253,14 +249,6 @@ class ConfigHandler:
 
     def set_model(self, new_model: str):
         self._model = new_model
-        self.save()
-
-    @property
-    def vae(self):
-        return self._vae
-
-    def set_vae(self, new_vae: str):
-        self._vae = new_vae
         self.save()
 
     @property
@@ -391,7 +379,6 @@ class ConfigHandler:
             "api_url": self._api_url,
             "current_workflow_file": self._current_workflow_file,
             "model": self._model,
-            "vae": self._vae,
             "width": self._width,
             "height": self._height,
             "sampler": self._sampler,
