@@ -49,11 +49,6 @@ class ComfyAPI:
         return response["KSampler"]["input"]["required"]["scheduler"][0]
 
     @staticmethod
-    def get_vaes(generation_info: dict | None = None) -> list[str]:
-        response = generation_info or ComfyAPI.get_generation_info()
-        return response["VAELoader"]["input"]["required"]["vae_name"][0]
-
-    @staticmethod
     def __get_output_image(generation_result: dict) -> tuple[bytes, str]:
         output = generation_result[list(generation_result.keys())[0]]["images"][0]
         response = requests.get(
