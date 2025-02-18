@@ -77,15 +77,11 @@ def ping_comfy_api():
 
     parameters = ComfyAPI.get_generation_info()
     models = ComfyAPI.get_models(parameters)
-    vaes = ComfyAPI.get_vaes(parameters)
     samplers = ComfyAPI.get_samplers(parameters)
     schedulers = ComfyAPI.get_schedulers(parameters)
 
     if config_handler.model == "":
         config_handler.set_model(models[0])
-
-    if config_handler.vae == "":
-        config_handler.set_vae(vaes[0])
 
     if config_handler.sampler == "":
         config_handler.set_sampler(samplers[0])
@@ -100,7 +96,6 @@ def ping_comfy_api():
             choices=models,
             value=config_handler.model,
         ),
-        gr.update(choices=vaes, value=config_handler.vae),
         gr.update(
             choices=samplers,
             value=config_handler.sampler,
@@ -178,13 +173,9 @@ def generation_parameters_ui():
             label="Model",
             interactive=True,
         )
-        vae_dropdown = gr.Dropdown([], label="VAE", interactive=True)
 
         model_dropdown.input(
             fn=lambda model: config_handler.set_model(model), inputs=model_dropdown
-        )
-        vae_dropdown.input(
-            fn=lambda vae: config_handler.set_vae(vae), inputs=vae_dropdown
         )
 
     with gr.Row():
@@ -315,7 +306,6 @@ def generation_parameters_ui():
         outputs=[
             connection_status_label,
             model_dropdown,
-            vae_dropdown,
             sampler_dropdown,
             scheduler_dropdown,
         ],
