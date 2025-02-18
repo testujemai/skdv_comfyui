@@ -15,7 +15,7 @@ def create_ext_updater():
     status = gr.Markdown()
     repo = gr.Textbox(
         visible=False,
-        value="https://github.com/SkinnyDevi/skdv_comfyui",
+        value="https://github.com/testujemai/skdv_comfyui",
     )
     restart_webui = gr.Markdown(
         "Please restart your WebUI using the restart button in the Sessions tab.",
