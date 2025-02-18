@@ -126,9 +126,9 @@ def generate_image(character: str, positive: str, negative: str, prompt_confirme
     workflow.set_negative_prompt(negative)
     workflow.set_character(character)
 
-    required_gen_fields = [CONFIG_HANDLER.model, CONFIG_HANDLER.vae, CONFIG_HANDLER.sampler, CONFIG_HANDLER.scheduler]
+    required_gen_fields = [CONFIG_HANDLER.model, CONFIG_HANDLER.sampler, CONFIG_HANDLER.scheduler]
     if any(v is None for v in required_gen_fields):
-        gr.Warning("Model, Vae, Sampler and Scheduler need to be selected before generation.")
+        gr.Warning("Model, Sampler and Scheduler need to be selected before generation.")
         return gr.update()
 
     try:
