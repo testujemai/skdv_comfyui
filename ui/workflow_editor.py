@@ -62,7 +62,6 @@ def update_checks_with_file_content(file_content: str):
         "prompt": False,
         "negative_prompt": False,
         "model": False,
-        "vae": False,
         "sampler": False,
         "scheduler": False,
         "steps": False,
@@ -140,9 +139,6 @@ def workflow_editor_ui():
             model_check = gr.Checkbox(
                 value=workflow_has_variable("model"), label=wrap_variable("model")
             )
-            vae_check = gr.Checkbox(
-                value=workflow_has_variable("vae"), label=wrap_variable("vae")
-            )
             sampler_check = gr.Checkbox(
                 value=workflow_has_variable("sampler"), label=wrap_variable("sampler")
             )
@@ -203,7 +199,6 @@ def workflow_editor_ui():
             prompt_check,
             negative_prompt_check,
             model_check,
-            vae_check,
             sampler_check,
             scheduler_check,
             steps_check,
@@ -228,7 +223,6 @@ def workflow_editor_ui():
             prompt_check,
             negative_prompt_check,
             model_check,
-            vae_check,
             sampler_check,
             scheduler_check,
             steps_check,
